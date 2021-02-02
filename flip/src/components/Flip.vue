@@ -8,20 +8,8 @@
 
 <script>
 import axios from 'axios'
-
-const buffToAudio = (slice) => {
-  const ac = new AudioContext()
-  ac.decodeAudioData(slice)
-    .then(buff => {
-        const source = ac.createBufferSource()
-        source.buffer = buff
-        source.connect(ac.destination)
-        source.start()
-    })
-    .catch(error => console.error(error))
-}
-
-console.log(buffToAudio)
+import { buffToAudio } from '../modules/bufferToAudio.js'
+import { slicer } from '../modules/slicer.js'
 
 export default {
   data() {
@@ -29,32 +17,22 @@ export default {
       file: null,
       fileURL: '',
       buffer: null,
-      bars: 8,
-      slices: []
+      bars: 16,
+      slices: [],
+      i: 0
     }
   },
   methods: {
     play() {
-      //play a middle 'C' for the duration of an 8th note
-      if (this.file) {
-        const audio = new Audio(this.fileURL)
-        audio.play()
-      }
+      buffToAudio(this.slices[this.i])
+      this.i += 1
     },
     upload(e) {
       this.file = (e.target.files[0])
       this.fileURL = URL.createObjectURL(this.file)
       axios({ url: this.fileURL, method: 'GET', responseType: 'arraybuffer' })
         .then(res => {
-          console.log(res.data)
-          const interval = Math.floor(res.data.byteLength / this.bars)
-          console.log(interval)
-          for (let i = 0; i < this.bars - 1; i++) {
-            this.slices.push(res.data.slice(i * interval, (i + 1) * interval))
-            console.log(res.data)
-          }
-          this.slices.push(res.data.slice(this.bars - 1 * interval, res.data.byteLength))
-          console.log(this.slices)
+          this.slices = slicer(res.data, this.bars)
         })
         .catch(err => console.error(err))
     },
