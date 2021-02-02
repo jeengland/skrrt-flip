@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import Flip from './components/Flip.vue'
+import Flip from './components/Flip'
 
 export default {
   name: 'App',
